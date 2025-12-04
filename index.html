@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShortsFlow - YouTubeショート倍速・スロー再生プレイヤー</title>
+    <meta name="description" content="YouTubeショート動画を0.1倍速から2.0倍速まで自由に速度変更できる無料ツール。ダンスの練習や詳細な動画分析に最適です。登録不要。">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f0f13;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent-color: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.5);
+            --text-main: #ffffff;
+            --text-sub: #a1a1aa;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 40%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 500px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 24px;
+            font-weight: 600;
+            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Input Area */
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: white;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        button.load-btn {
+            background: var(--accent-color);
+            border: none;
+            border-radius: 12px;
+            padding: 0 20px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button.load-btn:hover {
+            opacity: 0.9;
+            transform: scale(1.02);
+        }
+
+        /* Video Area */
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            padding-bottom: 177.77%;
+            /* 9:16 Aspect Ratio for Shorts */
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 24px;
+            display: none;
+            /* Hidden initially */
+        }
+
+        .video-wrapper.active {
+            display: block;
+        }
+
+        #player {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Controls */
+        .controls {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .speed-display {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .speed-label {
+            font-size: 0.875rem;
+            color: var(--text-sub);
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        /* Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+            margin-bottom: 20px;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            cursor: pointer;
+            margin-top: -10px;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #4b5563;
+            border-radius: 2px;
+        }
+
+        /* Quick Buttons */
+        .preset-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .preset-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: var(--text-sub);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: 0.2s;
+        }
+
+        .preset-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        /* Instructions */
+        .instructions {
+            margin-top: 30px;
+            font-size: 0.8rem;
+            color: var(--text-sub);
+            line-height: 1.5;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>ShortsFlow</h1>
+
+        <div class="input-group">
+            <input type="text" id="urlInput" placeholder="YouTube Shortsのリンクを貼る">
+            <button class="load-btn" onclick="loadVideo()">読込</button>
+        </div>
+
+        <div class="video-wrapper" id="videoWrapper">
+            <div id="player"></div>
+        </div>
+
+        <div class="controls">
+            <div class="speed-display"><span id="speedValue">1.0</span><span
+                    style="font-size:1rem; color:#a1a1aa;">x</span></div>
+            <span class="speed-label">再生速度 (0.1x - 2.0x)</span>
+
+            <input type="range" id="speedSlider" min="0.1" max="2.0" step="0.1" value="1.0"
+                oninput="updateSpeed(this.value)">
+
+            <div class="preset-buttons">
+                <button class="preset-btn" onclick="setSpeed(0.25)">0.25x</button>
+                <button class="preset-btn" onclick="setSpeed(0.5)">0.5x</button>
+                <button class="preset-btn" onclick="setSpeed(1.0)">標準</button>
+                <button class="preset-btn" onclick="setSpeed(1.5)">1.5x</button>
+                <button class="preset-btn" onclick="setSpeed(2.0)">2.0x</button>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <p>※ YouTubeの仕様上、0.25倍未満の速度は0.25倍として再生される場合があります。<br>音声は速度変更時にミュートになることがあります。</p>
+        </div>
+    </div>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script>
+        var player;
+        var currentVideoId = '';
+
+        function onYouTubeIframeAPIReady() {
+            // API is ready
+        }
+
+        function extractVideoID(url) {
+            var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            var match = url.match(regExp);
+
+            // Handle Shorts URL specifically
+            if (url.includes('shorts/')) {
+                const parts = url.split('shorts/');
+                if (parts[1]) {
+                    return parts[1].split('?')[0]; // Remove query parameters
+                }
+            }
+
+            if (match && match[2].length == 11) {
+                return match[2];
+            } else {
+                return null;
+            }
+        }
+
+        function loadVideo() {
+            var url = document.getElementById('urlInput').value;
+            var videoId = extractVideoID(url);
+
+            if (videoId) {
+                document.getElementById('videoWrapper').classList.add('active');
+
+                if (player) {
+                    player.loadVideoById(videoId);
+                } else {
+                    player = new YT.Player('player', {
+                        height: '100%',
+                        width: '100%',
+                        videoId: videoId,
+                        playerVars: {
+                            'playsinline': 1,
+                            'rel': 0,
+                            'modestbranding': 1
+                        },
+                        events: {
+                            'onReady': onPlayerReady
+                        }
+                    });
+                }
+            } else {
+                alert('有効なYouTube Shortsのリンクを入力してください');
+            }
+        }
+
+        function onPlayerReady(event) {
+            event.target.playVideo();
+            updateSpeed(document.getElementById('speedSlider').value);
+        }
+
+        function updateSpeed(value) {
+            // Update UI
+            document.getElementById('speedValue').innerText = parseFloat(value).toFixed(1);
+            document.getElementById('speedSlider').value = value;
+
+            // Update Player
+            if (player && player.setPlaybackRate) {
+                player.setPlaybackRate(parseFloat(value));
+            }
+        }
+
+        function setSpeed(value) {
+            updateSpeed(value);
+        }
+    </script>
+</body>
+
+</html>
